@@ -29,6 +29,7 @@ class FollowBot():
         
         # logs instance
         self.logs = Log(os.path.basename(__file__))
+        self.logs.info (f"Follow bot classic: debug_mode: {debug_mode}, headless: {headless}")
 
         if self.debug_mode:
             
@@ -72,6 +73,7 @@ class FollowBot():
                     break
             
         # Login to driver
+        self.logs.info ("Start login...")
         self.scraper = LogIn(self.user, self.password, self.headless, mobile=False)
         self.driver = self.scraper.driver 
         
@@ -81,6 +83,8 @@ class FollowBot():
         Get the number of the total followers, from the main user page, 
             and return the number
         """
+        
+        self.logs.info ("Getting number of followers...")
         
         # Go to main user page 
         user_page = f"https://www.instagram.com/{user}/"
@@ -105,6 +109,8 @@ class FollowBot():
         Return the profile link of the followers, from specific user
         """
         
+        self.logs.info("Taking follower's link...", print_text=True)
+        
         # read followed file
         followed_path = os.path.join (os.path.dirname(__file__), "followed.txt")
         with open (followed_path) as file: 
@@ -112,7 +118,6 @@ class FollowBot():
             followed_list = followed_text.split("\n")
 
         # Print data and save in log file
-        self.logs.info("Taking follower's link...", print_text=True)
         
         # Open followers pop 
         selector_followers = "#react-root > section > main > div > header > section > ul > li:nth-child(2) > a"
@@ -164,17 +169,16 @@ class FollowBot():
         """
         Like the last 3 post from specific user profile, and follow 
         """
+        
+        self.logs.info ("Starting likes and follow...")
 
         # Go to user page
         self.scraper.set_page(profile)
         self.scraper.refresh_selenium()
 
-        # Save data without print 
-        self.logs.info("Profile link: '{}'".format(profile), print_text=False)
-
-        # Print user names in one line
-        print("Current profile ({}/{}): {}".format(profile_index, profile_limit, profile))
-
+        msg = "Current profile ({}/{}): {}".format(profile_index, profile_limit, profile)
+        self.logs.info(msg, print_text=True)
+        
         # Follow and like only not followed users 
         selector_follow = "div.Igw0E div div button"
 
@@ -198,6 +202,7 @@ class FollowBot():
             t.sleep(secs)
             if not self.debug_mode:
                 self.scraper.click_js(selector_follow)
+                self.logs.info("\tUser followed", print_text=True)
             secs = random.randint(30, 180)
             t.sleep(secs)
 
@@ -209,7 +214,8 @@ class FollowBot():
                 t.sleep(secs)
                 if not self.debug_mode:
                     selector_like = "div.eo2As > section.ltpMr.Slqrh > span.fr66n > button"
-                self.scraper.click_js(selector_like)
+                    self.logs.info(f"\tPost {post_links.index(post_link) + 1} / 3 liked", print_text=True)
+                    self.scraper.click_js(selector_like)
                 secs = random.randint(30, 180)
                 t.sleep(secs)
                 
@@ -218,9 +224,13 @@ class FollowBot():
         """
         Main flow of the follow script
         """
+        
+        self.logs.info("Running autofollow")
 
         # Loop for each user in list
         for user in self.user_list: 
+            
+            self.logs.info(f"Target user: {user}")
 
             # Get the number of followers and validate user
             followers = self.__get_followers_num__(user) 

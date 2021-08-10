@@ -1,16 +1,18 @@
 # Move path directory, for import modules in parent folder
+import os 
+import sys
 currentdir = os.path.dirname(__file__)
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir) 
 
-import os 
-import sys
+import shutil
 import getpass
 import random
 import datetime
 import time as t
 import config
 import pandas as pd
+from log import Log
 from login import LogIn
 from pytz import timezone
 from openpyxl import load_workbook
@@ -28,17 +30,21 @@ class PostBot():
         # Save class vars
         self.debug_mode = debug_mode
         self.headless = headless
+        
+        # logs instance
+        self.logs = Log(os.path.basename(__file__))
+        self.logs.info (f"Post bot: debug_mode: {debug_mode}, headless: {headless}")
+
+        # Files and folders 
+        self.pubDone = os.path.join(currentdir, "Published")
+        self.directory = os.path.join(currentdir, img_dir)
+        self.filename = os.path.join(currentdir, xlsx_file)
 
         if self.debug_mode:
             
             # Get seed phrase from config json file
             self.user = config.get_credential("debug_user")
             self.password = config.get_credential("debug_pass")
-            
-            # Files and folders
-            self.pubDone = os.path.join(parentdir, "test", "post files", "Published")
-            self.directory = os.path.join(parentdir, "test", "post files", img_dir)
-            self.filename = os.path.join(parentdir, "test", "post files", xlsx_file)
             
         else: 
             
@@ -57,20 +63,18 @@ class PostBot():
             self.user = input('Please enter your instagram user: ')
             self.password = getpass.getpass('Please enter your instagram password: ')
             
-            # Files and folders 
-            self.pubDone = os.path.join(currentdir, "Published")
-            self.directory = os.path.join(currentdir, img_dir)
-            self.filename = os.path.join(currentdir, xlsx_file)
 
     def __post_photo__(self, caps):
         
-                
+        self.logs.info ("Posting photo")
+        
         for cap in caps:
             
             if self.imgPost.loc[self.imgPost.Insta == cap].Used.tolist()[0] != "Yes":
                 self.imgPost.loc[self.imgPost.Insta == cap, "Used"] = "Yes"           
                 
                 # Open browser en make login in each loop
+                self.logs.info ("Start login...")
                 self.scraper = LogIn(self.user, self.password, self.headless, mobile=True)
                 self.driver = self.scraper.driver 
                 
@@ -93,7 +97,7 @@ class PostBot():
                         photoname = os.path.join(images_folder, image)
                         
                 if not photoname or not os.path.isfile(photoname):
-                    print(f"File {photoname} doesn't exists..")
+                    self.logs.info (f"File {photoname} doesn't exists..", print_text=True)
                     break
                 
                 
@@ -131,13 +135,15 @@ class PostBot():
                     shutil.move(filepath, dirc)
 
                 # End browser
-                print("Photo post uploaded...")
+                self.logs.info ("Photo post uploaded...", print_text=True)
                 t.sleep(1)
                 break
             
         self.scraper.end_browser()
 
     def autopost(self):
+        
+        self.logs.info ("Running auto post")
         
         root = os.path.dirname(__file__)
         self.change_directory = self.pubDone
@@ -147,7 +153,7 @@ class PostBot():
             os.mkdir(self.change_directory)
 
         
-        print("Reading excel file...")
+        self.logs.info ("Reading excel file...", print_text=True)
         xls = pd.ExcelFile(self.filename)
         self.imgPost = pd.read_excel(xls, "Photo Posts", keep_default_na=False)
         self.schedule = pd.read_excel(xls, "Schedule", keep_default_na=False)
@@ -174,7 +180,7 @@ class PostBot():
                 time_now = str(datetime.datetime.now(tz).time()).split('.')[0]
                                 
                 if self.debug_mode: 
-                    print (time_string, time_now)
+                    self.logs.info (time_string, time_now)
 
                 # Convert hours string to date type
                 time_formated = datetime.datetime.strptime(time_string, "%H:%M:%S")
@@ -191,20 +197,20 @@ class PostBot():
                 if wait_seconds > 0 or self.debug_mode: 
 
                     if not self.debug_mode: 
-                        print ("Waiting for time: {}...".format(time_string))
+                        self.logs.info ("Waiting for time: {}...".format(time_string), print_text=True)
                         t.sleep(wait_seconds)
                                 
                     # Post
                     if self.schedule.loc[index_time]["Type of Post"] != '':
                         if self.schedule.loc[index_time]["Type of Post"] == "Photo":
-                            print("Calling photo function...")
+                            self.logs.info("Calling photo function...", print_text=True)
                             self.__post_photo__(caps)
                         
                         t.sleep(10)
                         self.__save_excel__()
                 else: 
                     # Skip negative times
-                    print ("Post omitted. The current time is greater than: {}".format(time_string))
+                    self.logs.info ("Post omitted. The current time is greater than: {}".format(time_string), print_text=True)
 
 
         except KeyboardInterrupt:
@@ -215,9 +221,11 @@ class PostBot():
                 
 
     def __save_excel__(self):
+        
 
         # Save in no debug
         if not self.debug_mode:
+            self.logs.info ("Saving data in file")
             writer = pd.ExcelWriter(
                 self.filename, engine='openpyxl')
             self.imgPost.to_excel(
@@ -228,5 +236,5 @@ class PostBot():
                 writer, sheet_name="DO NOT TOUCH!", index=False)
             self.writer = writer
             self.writer.save()
-            print("File saved")
+            self.logs.info ("File saved")
 

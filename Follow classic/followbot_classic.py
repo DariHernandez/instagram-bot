@@ -196,7 +196,10 @@ class FollowBot():
             # Click follow button
             secs = random.randint(30, 180)
             t.sleep(secs)
-            self.scraper.click_js(selector_follow)
+            if not self.debug_mode:
+                self.scraper.click_js(selector_follow)
+            secs = random.randint(30, 180)
+            t.sleep(secs)
 
             # Like each post (the last three)
             for post_link in post_links[:post_to_like]: 
@@ -204,8 +207,11 @@ class FollowBot():
                 self.scraper.set_page(post_link)
                 secs = random.randint(30, 180)
                 t.sleep(secs)
-                selector_like = "div.eo2As > section.ltpMr.Slqrh > span.fr66n > button"
+                if not self.debug_mode:
+                    selector_like = "div.eo2As > section.ltpMr.Slqrh > span.fr66n > button"
                 self.scraper.click_js(selector_like)
+                secs = random.randint(30, 180)
+                t.sleep(secs)
                 
 
     def autofollow (self): 

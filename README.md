@@ -128,6 +128,7 @@ bot.autopost()
 
 ### Debug mode
 The debug mode will ignore the publication times and immediately publish the scheduled photos.
+it does not affect the spreadsheet or move the images folder after publishing.
 
 For run the bot in debug mode the main file should look like: 
 

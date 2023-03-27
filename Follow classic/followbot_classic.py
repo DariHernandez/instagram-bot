@@ -8,7 +8,6 @@ import os
 import random
 import getpass
 import time as t
-import pandas as pd
 import config 
 from login import LogIn
 from log import Log

@@ -8,7 +8,6 @@ import os
 import random
 import getpass
 import time as t
-import pandas as pd
 import config 
 from login import LogIn
 from log import Log
@@ -94,7 +93,8 @@ class FollowBot():
         self.scraper.set_page(user_page)
         t.sleep(5)
 
-        selector_followers = "#react-root > section > main > div > header > section > ul > li:nth-child(2) > a > span"
+        # selector_followers = "#react-root > section > main > div > header > section > ul > li:nth-child(2) > a > span"
+        selector_followers = "li:nth-child(2) span._ac2a > span"
         
         # Get number of followers
         followers = self.scraper.get_text (selector_followers)
@@ -108,7 +108,7 @@ class FollowBot():
             return None
         
 
-    def __get_links__ (self, selector_link, selector_down): 
+    def __get_links__ (self, selector_link, selector_down, scroll_js=False, load_more_selector=""): 
         """
         Extract links from specific selects, and go down in the page for load the next links
         Save links in class variable "profile_links"
@@ -147,15 +147,28 @@ class FollowBot():
                     more_links = False
                     break
             
-            # try to go down
-            try: 
-                for _ in range (5):
-                    self.scraper.go_down(selector_down)
-                    t.sleep(2)
-            except: 
-                continue
+            
+            # Go down with js
+            if scroll_js:
+                elem = self.scraper.get_elem (selector_down)
+                self.scraper.driver.execute_script("arguments[0].scrollBy (0, 2500);", elem)
+                
+            # try to go down with selenium
             else:
-                t.sleep(1)
+                try: 
+                    for _ in range (5):
+                        self.scraper.go_down(selector_down)
+                        t.sleep(2)
+                except: 
+                    continue
+                else:
+                    t.sleep(1)
+                
+            # Click button for load more results
+            if load_more_selector:
+                load_more_btn = self.scraper.get_elem (load_more_selector)
+                if load_more_btn:
+                    self.scraper.click_js (load_more_selector)
         
 
     def __get_profiles__ (self, user, followers): 
@@ -191,9 +204,10 @@ class FollowBot():
             self.scraper.refresh_selenium()
             
             # Get comments profile links
-            selector_link = "li > div > div > div.C4VMK > h3 > div a"
-            selector_down = "#react-root > section > main > div > div.ltEKP > article > div.eo2As > div.EtaWk > ul > ul > div > li > div > span > div > button"
-            self.__get_links__(selector_link, selector_down)
+            selector_link = "ul._a9ym .xt0psk2 > a"
+            selector_down = "._ae5q._akdn._ae5r._ae5s ul._a9z6._a9za"
+            selector_load_more = "div._ae5q._akdn._ae5r._ae5s > ul > li > div > button"
+            self.__get_links__(selector_link, selector_down, scroll_js=True, load_more_selector=selector_load_more)
             
             # Get likes profile links
             t.sleep(1)
@@ -230,7 +244,8 @@ class FollowBot():
         self.logs.info ("Getting post...")
         
         # Get number of post of the user 
-        selector_post = ".Nnq7C.weEfm > .v1Nh3.kIKUG._bz0w > a"
+        # selector_post = ".Nnq7C.weEfm > .v1Nh3.kIKUG._bz0w > a"
+        selector_post = "._ac7v._al3n ._aabd._aa8k._al3l a"
         post_links = self.scraper.get_attribs(selector_post, "href")
         total_post = len(post_links)
         if total_post < max_post:
@@ -255,33 +270,34 @@ class FollowBot():
         self.logs.info(msg, print_text=True)
         
         # Follow and like only not followed users 
-        selector_follow = "div.Igw0E div div button"
+        selector_follow = "header button._acan._acap._acas._aj1-"
 
         self.total_followed += 1
 
         # Get number of post of the user 
         post_links = self.__get_post__(3)
             
+        # Generate wait time
+        secs = random.randint(30, 180)
+        if self.debug_mode:
+            secs = 5
+            
         # Click follow button
-        secs = random.randint(30, 180)
-        t.sleep(secs)
-        if not self.debug_mode:
+        try:
             self.scraper.click_js(selector_follow)
-            self.logs.info("\tUser followed", print_text=True)
-        secs = random.randint(30, 180)
+        except:
+            pass
+        self.logs.info("\tUser followed", print_text=True)
         t.sleep(secs)
 
         # Like each post (the last three)
         for post_link in post_links: 
             
             self.scraper.set_page(post_link)
-            secs = random.randint(30, 180)
             t.sleep(secs)
-            if not self.debug_mode:
-                selector_like = "div.eo2As > section.ltpMr.Slqrh > span.fr66n > button"
-                self.logs.info(f"\tPost {post_links.index(post_link) + 1} / 3 liked", print_text=True)
-                self.scraper.click_js(selector_like)
-            secs = random.randint(30, 180)
+            selector_like = "._aamu._ae3_._ae47._ae48 button:first-child._abl-"
+            self.logs.info(f"\tPost {post_links.index(post_link) + 1} / 3 liked", print_text=True)
+            self.scraper.click_js(selector_like)
             t.sleep(secs)
 
     def autofollow (self): 

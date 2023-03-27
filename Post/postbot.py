@@ -11,7 +11,6 @@ import random
 import datetime
 import time as t
 import config
-import pandas as pd
 from log import Log
 from login import LogIn
 from pytz import timezone
@@ -144,7 +143,6 @@ class PostBot():
     def autopost(self):
         
         self.logs.info ("Running auto post")
-        
         root = os.path.dirname(__file__)
         self.change_directory = self.pubDone
         

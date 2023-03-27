@@ -6,15 +6,14 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir) 
 
 import shutil
+import config
 import getpass
-import random
 import datetime
 import time as t
-import config
+import pandas as pd
 from log import Log
 from login import LogIn
 from pytz import timezone
-from openpyxl import load_workbook
 
 class PostBot():
     """ Auto post text or photo
@@ -32,7 +31,7 @@ class PostBot():
         
         # logs instance
         self.logs = Log(os.path.basename(__file__))
-        self.logs.info (f"Post bot: debug_mode: {debug_mode}, headless: {headless}")
+        self.logs.info (f"Post bot: debug_mode: {self.debug_mode}, headless: {self.headless}")
 
         # Files and folders 
         self.pubDone = os.path.join(currentdir, "Published")
@@ -74,7 +73,7 @@ class PostBot():
                 
                 # Open browser en make login in each loop
                 self.logs.info ("Start login...")
-                self.scraper = LogIn(self.user, self.password, self.headless, mobile=True)
+                self.scraper = LogIn(self.user, self.password, self.headless, mobile=False)
                 self.driver = self.scraper.driver 
                 
                 # self.__write_text__(cap)
@@ -101,27 +100,29 @@ class PostBot():
                 
                 
                 # Click on upload image button
-                selector_input = "#react-root > section > nav.NXc7H.f11OC > div > div > div.KGiwt > div > div > div.q02Nz._0TPg"
+                selector_input = ".xh8yej3.x1iyjqo2 > div:nth-child(7) .x1n2onr6 .x1n2onr6 > a"
                 self.scraper.click(selector_input)
+                self.scraper.refresh_selenium ()
                 
                 # Upload image
-                selector_input = "#react-root > section > nav.NXc7H.f11OC > div > div > form > input"
+                selector_input = ".x1n2onr6.x78zum5.x5yr21d.xh8yej3 form > input"
                 filepath = photoname
                 self.scraper.send_data(selector_input, filepath)                
                 t.sleep(10)
                 
                 # Go next
-                selector_next = "#react-root > section > div.Scmby > header > div > div.mXkkY.KDuQp > button"
-                self.scraper.wait_load(selector_next)
-                self.scraper.click(selector_next)
+                selector_next = "._ac7b._ac7d > .x9f619.xjbqb8w.x78zum5 > div"
+                for _ in range (2):
+                    self.scraper.wait_load(selector_next)
+                    self.scraper.click(selector_next)
                 
                 # Write text
-                selector_textarea = "#react-root > section > div.A9bvI > section.IpSxo > div.NfvXc > textarea"
+                selector_textarea = ".xw2csxc.x1odjw0f.x5dp1im.x1swvt13"
                 self.scraper.wait_load(selector_textarea)
                 self.scraper.send_data(selector_textarea, cap)
                     
                 # Share post
-                selector_share = "#react-root > section > div.Scmby > header > div > div.mXkkY.KDuQp > button"
+                selector_share = selector_next
                 self.scraper.wait_load(selector_share)
                 self.scraper.click(selector_share)
                 t.sleep (20)

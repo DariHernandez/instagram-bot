@@ -51,7 +51,7 @@ class LogIn (Web_scraping):
         
         # Go to login page in mobile
         if self.mobile: 
-            selector_login = "#react-root div.AC7dP.Igw0E.IwRSH.pmxbr.eGOV_._4EzTm.gKUEf > button:nth-child(1)"
+            selector_login = "button:nth-child(1)._aicz._acan._acao._acas"
             self.click_js(selector_login)
             self.refresh_selenium()
         

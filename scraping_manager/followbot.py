@@ -178,6 +178,8 @@ class FollowBot(metaclass=abc.ABCMeta):
         # Get number of post of the user 
         selector_post = "._ac7v._al3n ._aabd._aa8k._al3l a"
         post_links = self.scraper.get_attribs(selector_post, "href")
+        if len(post_links) > max_post: 
+            post_links = post_links[:max_post]
 
         return post_links
         

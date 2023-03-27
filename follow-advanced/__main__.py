@@ -1,7 +1,7 @@
-from followbot_advanced import FollowBot
+from followbot_advanced import FollowBotAdvanced
 
 # Instance of bot
-bot = FollowBot()
+bot = FollowBotAdvanced()
 
 # Run bot
 bot.autofollow()

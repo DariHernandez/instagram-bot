@@ -188,7 +188,7 @@ class FollowBot():
         
         for post_link in post_links: 
             
-            status = f"post {post_links.index(post_link) + 1} / 10: {post_link}"
+            status = f"post {post_links.index(post_link) + 1} / {len(post_link)}: {post_link}"
             self.logs.info (status, print_text=True)
             
             # End loop when found all max profile links
@@ -235,7 +235,7 @@ class FollowBot():
         self.logs.info('Follow List Length {}'.format(len(self.profile_links)), print_text=True)
         return self.profile_links
 
-    def __get_post__ (self, max_post = 10): 
+    def __get_post__ (self, max_post = 100): 
         """
         Get the post links of the current user
         """
@@ -243,15 +243,10 @@ class FollowBot():
         self.logs.info ("Getting post...")
         
         # Get number of post of the user 
-        # selector_post = ".Nnq7C.weEfm > .v1Nh3.kIKUG._bz0w > a"
         selector_post = "._ac7v._al3n ._aabd._aa8k._al3l a"
         post_links = self.scraper.get_attribs(selector_post, "href")
-        total_post = len(post_links)
-        if total_post < max_post:
-            max_post = total_post
-            
 
-        return post_links[:max_post]
+        return post_links
         
 
     def __like_post_follow__ (self, profile, profile_index, profile_limit):

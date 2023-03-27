@@ -1,7 +1,7 @@
-from followbot_classic import FollowBot
+from followbot_classic import FollowBotClassic
 
 # Instance of bot
-bot = FollowBot()
+bot = FollowBotClassic()
 
 # Run bot
 bot.autofollow()

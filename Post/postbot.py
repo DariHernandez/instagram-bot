@@ -23,12 +23,12 @@ class PostBot():
     After post an image, move this from folder "To Publish" to folder "Published"
     """
 
-    def __init__(self, img_dir, xlsx_file, debug_mode=False, headless=True):  
+    def __init__(self, img_dir, xlsx_file):  
 
 
         # Save class vars
-        self.debug_mode = debug_mode
-        self.headless = headless
+        self.debug_mode = config.get_credential("debug_mode")
+        self.headless = config.get_credential("headless")
         
         # logs instance
         self.logs = Log(os.path.basename(__file__))

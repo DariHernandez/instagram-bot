@@ -19,11 +19,11 @@ class FollowBot():
     and like the last three posts of the followed users.
     """
 
-    def __init__(self, debug_mode=False, headless=True):  
+    def __init__(self):  
         
         # Save class vars
-        self.debug_mode = debug_mode
-        self.headless = headless
+        self.debug_mode = config.get_credential("debug_mode")
+        self.headless = config.get_credential("headless")
         self.total_followed = 0
         
         # logs instance

@@ -7,7 +7,7 @@ directory = "To Publish"
 filename = "Bot Manager.xlsx"
 
 # Instance of bot
-bot = PostBot(xlsx_file=filename, img_dir=directory, debug_mode=True, headless=False)
+bot = PostBot(xlsx_file=filename, img_dir=directory)
 
 # Run bot
 bot.autopost()

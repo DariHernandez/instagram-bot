@@ -1,7 +1,7 @@
 from followbot_classic import FollowBot
 
 # Instance of bot
-bot = FollowBot(debug_mode=True, headless=False)
+bot = FollowBot()
 
 # Run bot
 bot.autofollow()

@@ -19,19 +19,18 @@ class FollowBot():
     and like the last three posts of the followed users.
     """
 
-    def __init__(self, debug_mode=False, headless=True):  
-        
+    def __init__(self):  
         
         # Save class vars
-        self.debug_mode = debug_mode
-        self.headless = headless
+        self.debug_mode = config.get_credential("debug_mode")
+        self.headless = config.get_credential("headless")
         self.total_followed = 0
         self.profile_links = []
         self.followed_list = []
         
         # logs instance
         self.logs = Log(os.path.basename(__file__))
-        self.logs.info (f"Follow bot advanced: debug_mode: {debug_mode}, headless: {headless}")
+        self.logs.info (f"Follow bot advanced: debug_mode: {self.debug_mode}, headless: {self.headless}")
 
         if self.debug_mode:
             

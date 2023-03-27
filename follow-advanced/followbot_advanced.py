@@ -107,7 +107,7 @@ class FollowBot():
             return None
         
 
-    def __get_links__ (self, selector_link, selector_down, scroll_js=False, load_more_selector=""): 
+    def __get_links__ (self, selector_link, selector_down, load_more_selector=""): 
         """
         Extract links from specific selects, and go down in the page for load the next links
         Save links in class variable "profile_links"
@@ -148,21 +148,9 @@ class FollowBot():
             
             
             # Go down with js
-            if scroll_js:
-                elem = self.scraper.get_elem (selector_down)
-                self.scraper.driver.execute_script("arguments[0].scrollBy (0, 2500);", elem)
-                
-            # try to go down with selenium
-            else:
-                try: 
-                    for _ in range (5):
-                        self.scraper.go_down(selector_down)
-                        t.sleep(2)
-                except: 
-                    continue
-                else:
-                    t.sleep(1)
-                
+            elem = self.scraper.get_elem (selector_down)
+            self.scraper.driver.execute_script("arguments[0].scrollBy (0, 2500);", elem)
+            
             # Click button for load more results
             if load_more_selector:
                 load_more_btn = self.scraper.get_elem (load_more_selector)
@@ -206,12 +194,12 @@ class FollowBot():
             selector_link = "ul._a9ym .xt0psk2 > a"
             selector_down = "._ae5q._akdn._ae5r._ae5s ul._a9z6._a9za"
             selector_load_more = "div._ae5q._akdn._ae5r._ae5s > ul > li > div > button"
-            self.__get_links__(selector_link, selector_down, scroll_js=True, load_more_selector=selector_load_more)
+            self.__get_links__(selector_link, selector_down, load_more_selector=selector_load_more)
             
             # Get likes profile links
             t.sleep(1)
             self.scraper.refresh_selenium()
-            selector_likes = "article > div.eo2As > section.EDfFK.ygqzn > div > div > a"
+            selector_likes = "._ae5m._ae5n._ae5o a"
             try:
                 self.scraper.click_js(selector_likes)
             except: 
@@ -221,8 +209,8 @@ class FollowBot():
                 t.sleep(1)
                 
                 # Get like profiles
-                selector_link = "div div span > a"
-                selector_down = "body > div.RnEpo.Yx5HN > div > div > div.Igw0E.IwRSH.eGOV_.vwCYk.i0EQd > div > div > div:last-child > div.Igw0E.rBNOH.YBx95.ybXk5._4EzTm.soMvl > button"
+                selector_link = ".x7r02ix.xf1ldfh.x131esax .xt0psk2 > .xt0psk2 > a"
+                selector_down = '[role="dialog"] [style^="height: 356px;"]'
                 self.__get_links__(selector_link, selector_down)
                             
         # Update followed file

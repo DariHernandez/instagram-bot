@@ -225,7 +225,10 @@ class FollowBot(metaclass=abc.ABCMeta):
             t.sleep(secs)
             selector_like = "._aamu._ae3_._ae47._ae48 button:first-child._abl-"
             print(f"\tPost {post_links.index(post_link) + 1} / 3 liked")
-            self.scraper.click_js(selector_like)
+            try:
+                self.scraper.click_js(selector_like)
+            except:
+                print ("\t\tlike button not found")
             t.sleep(secs)
 
     def autofollow (self): 

@@ -19,7 +19,7 @@ class FollowBotAdvanced (FollowBot):
         """
                 
         # Print data and save in log file
-        self.logs.info("Taking follower's link from post likes and comments...", print_text=True)
+        print("Taking follower's link from post likes and comments...")
         
         # read followed file
         followed_path = os.path.join (os.path.dirname(__file__), "followed.txt")
@@ -32,7 +32,7 @@ class FollowBotAdvanced (FollowBot):
         for post_link in post_links: 
             
             status = f"post {post_links.index(post_link) + 1} / {len(post_link)}: {post_link}"
-            self.logs.info (status, print_text=True)
+            print (status)
             
             # End loop when found all max profile links
             links_num = len (self.profile_links)
@@ -75,5 +75,5 @@ class FollowBotAdvanced (FollowBot):
             file.write(all_followed_text)
             
         # Print data and save in log file
-        self.logs.info('Follow List Length {}'.format(len(self.profile_links)), print_text=True)
+        print('Follow List Length {}'.format(len(self.profile_links)))
         return self.profile_links

@@ -12,7 +12,6 @@ import getpass
 import time as t
 import config 
 from login import LogIn
-from log import Log
 
 class FollowBot(metaclass=abc.ABCMeta):
     """ Auto follow users
@@ -30,9 +29,7 @@ class FollowBot(metaclass=abc.ABCMeta):
         self.profile_links = []
         self.followed_list = []
         
-        # logs instance
-        self.logs = Log(os.path.basename(__file__))
-        self.logs.info (f"Follow bot advanced: debug_mode: {self.debug_mode}, headless: {self.headless}")
+        print (f"Follow bot advanced: debug_mode: {self.debug_mode}, headless: {self.headless}")
 
         if self.debug_mode:
             
@@ -76,7 +73,7 @@ class FollowBot(metaclass=abc.ABCMeta):
                     break
             
         # Login to driver
-        self.logs.info ("Start login...")
+        print ("Start login...")
         self.scraper = LogIn(self.user, self.password, self.headless, mobile=False)
         self.driver = self.scraper.driver 
         
@@ -87,7 +84,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             and return the number
         """
         
-        self.logs.info ("Getting number of followers...")
+        print ("Getting number of followers...")
         
         # Go to main user page 
         user_page = f"https://www.instagram.com/{user}/"
@@ -105,7 +102,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             return followers
         else: 
             # Print data and save in log file
-            self.logs.info("User '{}' not found.".format(os.path.basename(user)), print_text=True)
+            print("User '{}' not found.".format(os.path.basename(user)))
             return None
         
 
@@ -115,7 +112,7 @@ class FollowBot(metaclass=abc.ABCMeta):
         Save links in class variable "profile_links"
         """
                 
-        self.logs.info ("Getting links...")
+        print ("Getting links...")
         
         more_links = True
         last_links = []
@@ -175,7 +172,7 @@ class FollowBot(metaclass=abc.ABCMeta):
         Get the post links of the current user
         """
         
-        self.logs.info ("Getting post...")
+        print ("Getting post...")
         
         # Get number of post of the user 
         selector_post = "._ac7v._al3n ._aabd._aa8k._al3l a"
@@ -191,14 +188,14 @@ class FollowBot(metaclass=abc.ABCMeta):
         Like the last 3 post from specific user profile, and follow 
         """
         
-        self.logs.info ("Starting likes and follow...")
+        print ("Starting likes and follow...")
         
         # Go to user page
         self.scraper.set_page(profile)
         self.scraper.refresh_selenium()
 
         msg = "Current profile ({}/{}): {}".format(profile_index, profile_limit, profile)
-        self.logs.info(msg, print_text=True)
+        print(msg)
         
         # Follow and like only not followed users 
         selector_follow = "header button._acan._acap._acas._aj1-"
@@ -218,7 +215,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             self.scraper.click_js(selector_follow)
         except:
             pass
-        self.logs.info("\tUser followed", print_text=True)
+        print("\tUser followed")
         t.sleep(secs)
 
         # Like each post (the last three)
@@ -227,7 +224,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             self.scraper.set_page(post_link)
             t.sleep(secs)
             selector_like = "._aamu._ae3_._ae47._ae48 button:first-child._abl-"
-            self.logs.info(f"\tPost {post_links.index(post_link) + 1} / 3 liked", print_text=True)
+            print(f"\tPost {post_links.index(post_link) + 1} / 3 liked")
             self.scraper.click_js(selector_like)
             t.sleep(secs)
 
@@ -236,12 +233,12 @@ class FollowBot(metaclass=abc.ABCMeta):
         Main flow of the follow script
         """
         
-        self.logs.info("Running autofollow")
+        print("Running autofollow")
 
         # Loop for each user in list
         for user in self.user_list: 
             
-            self.logs.info(f"Target user: {user}")
+            print(f"Target user: {user}")
 
             # Get the number of followers and validate user
             followers = self.__get_followers_num__(user) 
@@ -249,16 +246,16 @@ class FollowBot(metaclass=abc.ABCMeta):
             # Only continue with valid users
             if followers: 
 
-                # Print data and save in log file
+                # Print data and save in log fileº
                 print ("\n")
-                self.logs.info("User '{}'".format(os.path.basename(user)), print_text=True)
-                self.logs.info("Followers Number: {}".format(followers), print_text=True)
-                self.logs.info("Limit: {}".format(self.max_follow), print_text=True)
+                print("User '{}'".format(os.path.basename(user)))
+                print("Followers Number: {}".format(followers))
+                print("Limit: {}".format(self.max_follow))
                 
                 profiles = self.__get_profiles__(user, followers)
                 
                 # Print data and save in log file
-                self.logs.info("Initiating auto following and upvoting...", print_text=True)
+                print("Initiating auto following and upvoting...")
 
                 # Loop for each profile of followers 
                 profile_limit = len(profiles)
@@ -269,7 +266,7 @@ class FollowBot(metaclass=abc.ABCMeta):
 
         # Print data and save in log file
         print ("\n")
-        self.logs.info("Total users followed: '{}'".format(self.total_followed), print_text=True)
+        print("Total users followed: '{}'".format(self.total_followed))
         self.scraper.end_browser()
 
 

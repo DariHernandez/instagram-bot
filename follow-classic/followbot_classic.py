@@ -18,7 +18,7 @@ class FollowBotClassic (FollowBot):
         Return the profile link of the followers, from specific user
         """
                 
-        self.logs.info("Taking follower's link...", print_text=True)
+        print("Taking follower's link...")
         
         # read followed file
         followed_path = os.path.join (os.path.dirname(__file__), "followed.txt")

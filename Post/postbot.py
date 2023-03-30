@@ -31,7 +31,7 @@ class PostBot():
         
         # logs instance
         self.logs = Log(os.path.basename(__file__))
-        self.logs.info (f"Post bot: debug_mode: {self.debug_mode}, headless: {self.headless}")
+        print (f"Post bot: debug_mode: {self.debug_mode}, headless: {self.headless}")
 
         # Files and folders 
         self.pubDone = os.path.join(currentdir, "Published")
@@ -64,7 +64,7 @@ class PostBot():
 
     def __post_photo__(self, caps):
         
-        self.logs.info ("Posting photo")
+        print ("Posting photo")
         
         for cap in caps:
             
@@ -72,7 +72,7 @@ class PostBot():
                 self.imgPost.loc[self.imgPost.Insta == cap, "Used"] = "Yes"           
                 
                 # Open browser en make login in each loop
-                self.logs.info ("Start login...")
+                print ("Start login...")
                 self.scraper = LogIn(self.user, self.password, self.headless, mobile=False)
                 self.driver = self.scraper.driver 
                 
@@ -95,7 +95,7 @@ class PostBot():
                         photoname = os.path.join(images_folder, image)
                         
                 if not photoname or not os.path.isfile(photoname):
-                    self.logs.info (f"File {photoname} doesn't exists..", print_text=True)
+                    print (f"File {photoname} doesn't exists..")
                     break
                 
                 
@@ -135,7 +135,7 @@ class PostBot():
                     shutil.move(filepath, dirc)
 
                 # End browser
-                self.logs.info ("Photo post uploaded...", print_text=True)
+                print ("Photo post uploaded...")
                 t.sleep(1)
                 break
             
@@ -143,7 +143,7 @@ class PostBot():
 
     def autopost(self):
         
-        self.logs.info ("Running auto post")
+        print ("Running auto post")
         root = os.path.dirname(__file__)
         self.change_directory = self.pubDone
         
@@ -152,7 +152,7 @@ class PostBot():
             os.mkdir(self.change_directory)
 
         
-        self.logs.info ("Reading excel file...", print_text=True)
+        print ("Reading excel file...")
         xls = pd.ExcelFile(self.filename)
         self.imgPost = pd.read_excel(xls, "Photo Posts", keep_default_na=False)
         self.schedule = pd.read_excel(xls, "Schedule", keep_default_na=False)
@@ -179,7 +179,7 @@ class PostBot():
                 time_now = str(datetime.datetime.now(tz).time()).split('.')[0]
                                 
                 if self.debug_mode: 
-                    self.logs.info (time_string, time_now)
+                    print (time_string, time_now)
 
                 # Convert hours string to date type
                 time_formated = datetime.datetime.strptime(time_string, "%H:%M:%S")
@@ -196,20 +196,20 @@ class PostBot():
                 if wait_seconds > 0 or self.debug_mode: 
 
                     if not self.debug_mode: 
-                        self.logs.info ("Waiting for time: {}...".format(time_string), print_text=True)
+                        print ("Waiting for time: {}...".format(time_string))
                         t.sleep(wait_seconds)
                                 
                     # Post
                     if self.schedule.loc[index_time]["Type of Post"] != '':
                         if self.schedule.loc[index_time]["Type of Post"] == "Photo":
-                            self.logs.info("Calling photo function...", print_text=True)
+                            print("Calling photo function...")
                             self.__post_photo__(caps)
                         
                         t.sleep(10)
                         self.__save_excel__()
                 else: 
                     # Skip negative times
-                    self.logs.info ("Post omitted. The current time is greater than: {}".format(time_string), print_text=True)
+                    print ("Post omitted. The current time is greater than: {}".format(time_string))
 
 
         except KeyboardInterrupt:
@@ -224,7 +224,7 @@ class PostBot():
 
         # Save in no debug
         if not self.debug_mode:
-            self.logs.info ("Saving data in file")
+            print ("Saving data in file")
             writer = pd.ExcelWriter(
                 self.filename, engine='openpyxl')
             self.imgPost.to_excel(
@@ -235,5 +235,5 @@ class PostBot():
                 writer, sheet_name="DO NOT TOUCH!", index=False)
             self.writer = writer
             self.writer.save()
-            self.logs.info ("File saved")
+            print ("File saved")
 

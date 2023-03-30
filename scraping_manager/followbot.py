@@ -152,13 +152,14 @@ class FollowBot(metaclass=abc.ABCMeta):
             # Go down with js
             elem = self.scraper.get_elem (selector_down)
             if elem:
-                self.scraper.driver.execute_script("arguments[0].scrollBy (0, 2500);", elem)
+                self.scraper.driver.execute_script("arguments[0].scrollBy (0, 3000);", elem)
             
             # Click button for load more results
             if load_more_selector:
                 load_more_btn = self.scraper.get_elem (load_more_selector)
                 if load_more_btn:
                     self.scraper.click_js (load_more_selector)
+                    t.sleep(3)
         
 
     @abc.abstractmethod

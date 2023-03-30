@@ -85,6 +85,9 @@ class LogIn (Web_scraping):
             else: 
                 self.click(selector_not_add)
         
+        self.screenshot("login-screenshot")
+        input ("Press enter to continue...")
+        
         self.refresh_selenium()
             
     

@@ -353,8 +353,11 @@ class Web_scraping ():
         Return an specific element in the page
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
-        return elem
+        try:
+            elem = self.driver.find_element_by_css_selector (selector)
+            return elem
+        except:
+            return None
     
     
     def get_elems (self, selector):

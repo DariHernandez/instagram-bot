@@ -4,11 +4,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 import time, os, sys
-from scraping_manager.automate import Web_scraping
+from scraping_manager.automate import WebScraping
 
-class LogIn (Web_scraping):
+class LogIn (WebScraping):
     
-    def __init__(self, user, password, headless=False, mobile=True):
+    def __init__(self, user, password, headless=False, mobile=True, debug=False):
+        
+        chrome_folder = None
+        if debug:
+            chrome_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chrome-data")
         
         self.host = "https://www.instagram.com/"
         
@@ -22,14 +26,16 @@ class LogIn (Web_scraping):
         # Create selenium instance
         super().__init__(web_page=self.host, 
                          headless=headless, 
-                         user_agent=user_agent)
+                         user_agent=user_agent, 
+                         chrome_folder=chrome_folder)
         
         print ("Login to Instagram...")
         
         self.user = user
         self.password = password
         
-        self.__auth__()
+        if not debug:
+            self.__auth__()
                 
     def __auth__(self):
         

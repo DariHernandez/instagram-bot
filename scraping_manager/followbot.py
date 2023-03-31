@@ -74,7 +74,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             
         # Login to driver
         print ("Start login...")
-        self.scraper = LogIn(self.user, self.password, self.headless, mobile=False)
+        self.scraper = LogIn(self.user, self.password, self.headless, mobile=False, debug=self.debug_mode)
         self.driver = self.scraper.driver 
         
 
@@ -106,7 +106,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             return None
         
 
-    def __get_links__ (self, selector_link, selector_down, load_more_selector=""): 
+    def __get_links__ (self, selector_link, selector_down, load_more_selector="", scroll_by=0): 
         """
         Extract links from specific selects, and go down in the page for load the next links
         Save links in class variable "profile_links"
@@ -147,14 +147,20 @@ class FollowBot(metaclass=abc.ABCMeta):
             
             
             # Go down with js
-            elem = self.scraper.get_elem (selector_down)
-            if elem:
-                self.scraper.driver.execute_script("arguments[0].scrollBy (0, 3000);", elem)
+            try:
+                elem = self.scraper.get_elem (selector_down)
+            except:
+                pass
+            else:
+                self.scraper.driver.execute_script(f"arguments[0].scrollBy (0, {scroll_by});", elem)
             
             # Click button for load more results
             if load_more_selector:
-                load_more_btn = self.scraper.get_elem (load_more_selector)
-                if load_more_btn:
+                try:
+                    load_more_btn = self.scraper.get_elem (load_more_selector)
+                except:
+                    pass
+                else:
                     self.scraper.click_js (load_more_selector)
                     t.sleep(3)
         
@@ -223,7 +229,7 @@ class FollowBot(metaclass=abc.ABCMeta):
             
             self.scraper.set_page(post_link)
             t.sleep(secs)
-            selector_like = "._aamu._ae3_._ae47._ae48 button:first-child._abl-"
+            selector_like = ".x78zum5 > span.xp7jhwk:first-child > button"
             print(f"\tPost {post_links.index(post_link) + 1} / 3 liked")
             try:
                 self.scraper.click_js(selector_like)

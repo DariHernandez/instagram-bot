@@ -47,14 +47,14 @@ class FollowBotAdvanced (FollowBot):
             
             # Get comments profile links
             selector_link = "ul._a9ym .xt0psk2 > a"
-            selector_down = "._ae5q._akdn._ae5r._ae5s ul._a9z6._a9za"
-            selector_load_more = "div._ae5q._akdn._ae5r._ae5s > ul > li > div > button"
-            self.__get_links__(selector_link, selector_down, load_more_selector=selector_load_more)
+            selector_down = ".x10l6tqk.xexx8yu.x1pi30zi > .x5yr21d > ul._a9z6._a9za"
+            selector_load_more = ".x10l6tqk.xexx8yu.x1pi30zi > .x5yr21d > ul._a9z6._a9za > li button"
+            self.__get_links__(selector_link, selector_down, load_more_selector=selector_load_more, scroll_by=3000)
             
             # Get likes profile links
             t.sleep(1)
             self.scraper.refresh_selenium()
-            selector_likes = "._ae5m._ae5n._ae5o a"
+            selector_likes = "span.x1lliihq > a"
             try:
                 self.scraper.click_js(selector_likes)
             except: 
@@ -64,9 +64,9 @@ class FollowBotAdvanced (FollowBot):
                 t.sleep(1)
                 
                 # Get like profiles
-                selector_link = ".x7r02ix.xf1ldfh.x131esax .xt0psk2 > .xt0psk2 > a"
+                selector_link = "span.x1lliihq.x193iq5w.x6ikm8r a"
                 selector_down = '[role="dialog"] [style^="height: 356px;"]'
-                self.__get_links__(selector_link, selector_down)
+                self.__get_links__(selector_link, selector_down, scroll_by=1500)
                             
         # Update followed file
         all_followed = self.profile_links + self.followed_list

@@ -36,7 +36,7 @@ class FollowBotClassic (FollowBot):
         # Load more followers
         selector_link = ".x7r02ix.xf1ldfh.x131esax .xt0psk2 > .xt0psk2 > a"
         selector_down = '[role="dialog"] ._aano'
-        self.__get_links__(selector_link, selector_down)
+        self.__get_links__(selector_link, selector_down, scroll_by=3000)
 
         # Get all profile links
         self.scraper.refresh_selenium()

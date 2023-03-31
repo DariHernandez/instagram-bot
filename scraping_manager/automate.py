@@ -6,24 +6,32 @@ import zipfile
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.utils import ChromeType
+from webdriver_manager.chrome import ChromeDriverManager, ChromeType
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import Select
 
 current_file = os.path.basename(__file__)
-
   
-class Web_scraping (): 
+# Diable web driver manager logs 
+logger_webdriver = logging.getLogger("webdriver_manager")
+logger_webdriver.setLevel(logging.ERROR)
+
+logger_selenium = logging.getLogger("selenium")
+logger_selenium.setLevel(logging.ERROR)
+
+class WebScraping (): 
     """
     Class to manage and configure web browser
     """
     
     def __init__ (
-            self, web_page="", headless=True, time_out=0, 
+            self, web_page="", headless=False, time_out=0, 
             proxy_server="", proxy_port="", proxy_user="", proxy_pass="", 
-            user_agent=""): 
+            chrome_folder="", user_agent=False, capabilities=False,
+            download_folder="", extensions=[], incognito=False, experimentals=True, 
+            start_killing=False): 
         """
         Constructor of the class
         """
@@ -39,20 +47,35 @@ class Web_scraping ():
         self.__proxy_user = proxy_user
         self.__proxy_pass = proxy_pass
         self.__pluginfile = 'proxy_auth_plugin.zip'
+        self.__chrome_folder = chrome_folder
         self.__user_agent = user_agent
-        
-        # Desable modules logs
-        logging.disable(logging.DEBUG)
-        
+        self.__capabilities = capabilities
+        self.__download_folder = download_folder
+        self.__extensions = extensions
+        self.__incognito = incognito
+        self.__experimentals = experimentals
+
+
+        # Kill chrome from CMD in donwows
+        if start_killing: 
+            print ("\nTry to kill chrome...")
+            command = 'taskkill /IM "chrome.exe" /F'
+            os.system (command)
+            print ("Ok\n")
+
         # Create and instance of the web browser 
         self.__set_browser_instance()
         
         # Get current file name
         self.current_file = os.path.basename(__file__)
-        
+
         # Set time out 
         if time_out > 0: 
-            self.driver.set_page_load_timeout(30)
+            self.driver.set_page_load_timeout(time_out)
+
+        if self.__web_page:
+            self.set_page (self.__web_page)
+        
 
     def __set_browser_instance (self):
         """
@@ -69,9 +92,14 @@ class Web_scraping ():
         options.add_argument('--start-maximized')
         options.add_argument('--output=/dev/null')
         options.add_argument('--log-level=3')
-        options.add_argument("--disable-notifications");
-        options.add_argument("disable-infobars");
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_argument("--disable-notifications")
+        options.add_argument("disable-infobars")
+        options.add_argument("--safebrowsing-disable-download-protection")
+
+        # Experimentals
+        if self.__experimentals:
+            options.add_experimental_option('excludeSwitches', ['enable-logging', "enable-automation"])
+            options.add_experimental_option('useAutomationExtension', False)
         
         if self.__headless:        
             options.add_argument("--window-size=1920,1080")
@@ -90,25 +118,56 @@ class Web_scraping ():
             
             self.__create_proxy_extesion()
             options.add_extension(self.__pluginfile)
-            
-        if self.__user_agent: 
-            options.add_argument(f"--user-agent={self.__user_agent}")
+
+        # Set chrome folder
+        if self.__chrome_folder:
+            options.add_argument(f"--user-data-dir={self.__chrome_folder}")
+
+        # Set default user agent
+        if self.__user_agent:
+            options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36')
         
+        if self.__capabilities:
+            capabilities = DesiredCapabilities.CHROME
+            capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
+        else: 
+            capabilities = None
+
+        if self.__download_folder:
+            prefs = {"download.default_directory" : f"{self.__download_folder}", 
+                    "download.prompt_for_download": "false",
+                    'profile.default_content_setting_values.automatic_downloads': 1,
+                    'profile.default_content_settings.popups': 0,
+                    "download.directory_upgrade": True,
+                    "plugins.always_open_pdf_externally": True,
+                    "plugins.plugins_list": [{"enabled": False, "name": "Chrome PDF Viewer"}],
+                    'download.extensions_to_open': 'xml',
+                    'safebrowsing.enabled': True        
+                    }
+
+            options.add_experimental_option("prefs",prefs)
+
+        if self.__extensions:
+            for extension in self.__extensions:
+                options.add_extension(extension)
+
+        if self.__incognito:
+            options.add_argument("--incognito")
+
+        if self.__experimentals:
+            options.add_argument("--disable-blink-features=AutomationControlled")
+
+
         
         # Set configuration to  and create instance
-        chromedriver = ChromeDriverManager(chrome_type=ChromeType.GOOGLE, 
-                                            log_level='0', 
-                                            print_first_line=False).install()
-        self.driver = webdriver.Chrome(chromedriver, options=options, service_log_path=None)
+        chromedriver = ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install()
+        self.driver = webdriver.Chrome(chromedriver, 
+                                options=options, 
+                                service_log_path=None,
+                                desired_capabilities=capabilities)
 
         # Clean terminal
         # os.system('cls||clear')
-        
-        if self.__web_page: 
-            self.driver.get (self.__web_page)
-
-            # Wait to load page
-            # time.sleep (self.basetime*5)
             
     def __create_proxy_extesion (self): 
         """Create a proxy chrome extension"""
@@ -182,7 +241,17 @@ class Web_scraping ():
             file_name = f"{base_name}.png"
             
         self.driver.save_screenshot(file_name)
-             
+        
+    def full_screenshot(self, path: str):
+        # Ref: https://stackoverflow.com/a/52572919/
+        original_size = self.driver.get_window_size()
+        required_width = self.driver.execute_script('return document.body.parentNode.scrollWidth')
+        required_height = self.driver.execute_script('return document.body.parentNode.scrollHeight')
+        self.driver.set_window_size(required_width, required_height)
+        # driver.save_screenshot(path)  # has scrollbar
+        self.screenshot (path) # avoids scrollbar
+        self.driver.set_window_size(original_size['width'], original_size['height'])
+                
     def get_browser (self): 
         """
         Return the current instance of web browser
@@ -196,7 +265,7 @@ class Web_scraping ():
         End current instance of web browser
         """    
         
-        self.driver.close()
+        self.driver.quit ()
     
     
     def __reload_browser (self): 
@@ -214,7 +283,7 @@ class Web_scraping ():
         Send data to specific input fill
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.send_keys (data)
 
     
@@ -223,7 +292,7 @@ class Web_scraping ():
         Send click to specific element in the page
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.click()
     
     
@@ -238,7 +307,7 @@ class Web_scraping ():
             if total_time < time_out: 
                 total_time += 1
                 try: 
-                    elem = self.driver.find_element_by_css_selector (selector)
+                    elem = self.driver.find_element(By.CSS_SELECTOR, selector)
                     elem.text
                     break
                 except:
@@ -266,7 +335,7 @@ class Web_scraping ():
             if total_time < time_out: 
                 total_time += 1
                 try: 
-                    elem = self.driver.find_element_by_css_selector (selector)
+                    elem = self.driver.find_element(By.CSS_SELECTOR, selector)
                     elem.text
                     time.sleep(self.basetime)
                     continue
@@ -282,7 +351,7 @@ class Web_scraping ():
         """
         
         try: 
-            elem = self.driver.find_element_by_css_selector (selector)
+            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
             return elem.text
         except Exception as err: 
             # print (err)
@@ -296,16 +365,19 @@ class Web_scraping ():
         
         texts = []
         
-        elems = self.driver.find_elements_by_css_selector (selector)
+        elems = self.driver.find_elements(By.CSS_SELECTOR, selector)
         
         for elem in elems:         
             try: 
                 texts.append(elem.text)
-            except Exception as err:
-                input (err)
+            except:
                 continue
         
         return texts
+
+    def set_attrib (self, selector, attrib_name, attrib_value):
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+        self.driver.execute_script(f"arguments[0].setAttribute('{attrib_name}', '{attrib_value}');", elem)
     
      
     def get_attrib (self, selector, attrib_name): 
@@ -314,7 +386,7 @@ class Web_scraping ():
         """
         
         try: 
-            elem = self.driver.find_element_by_css_selector (selector)
+            elem = self.driver.find_element(By.CSS_SELECTOR, selector)
             return elem.get_attribute(attrib_name)
         except:
             return None
@@ -326,7 +398,7 @@ class Web_scraping ():
         """
         
         attributes = []
-        elems = self.driver.find_elements_by_css_selector (selector)
+        elems = self.driver.find_elements(By.CSS_SELECTOR, selector)
 
         for elem in elems:
 
@@ -353,11 +425,8 @@ class Web_scraping ():
         Return an specific element in the page
         """
         
-        try:
-            elem = self.driver.find_element_by_css_selector (selector)
-            return elem
-        except:
-            return None
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
+        return elem
     
     
     def get_elems (self, selector):
@@ -365,7 +434,7 @@ class Web_scraping ():
         Return a list of specific element in the page
         """
         
-        elems = self.driver.find_elements_by_css_selector (selector)
+        elems = self.driver.find_elements(By.CSS_SELECTOR, selector)
         return elems
     
     
@@ -418,57 +487,58 @@ class Web_scraping ():
         Send click with js, for hiden elements
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         self.driver.execute_script("arguments[0].click();", elem)
         
     
-    def select_drop_dopwn (self, selector, item_index): 
+    def select_drop_down_index (self, selector, index): 
         """
         Select specific elemet (with number) in a drop down elemet
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
-        
-        elem.click()
-        for _ in range(0, item_index):
-            time.sleep(0.1)
-            elem.send_keys(Keys.DOWN)
-        elem.send_keys(Keys.ENTER)
+        select_elem = Select(self.get_elem (selector))
+        select_elem.select_by_index (index)
+
+    def select_drop_down_text (self, selector, text):
+        """ Select a value in a drop down eleme (Select elem)"""
+
+        select_elem = Select(self.get_elem (selector))
+        select_elem.select_by_visible_text (text)
     
     
-    def go_bottom (self, selector="body"): 
+    def go_bottom (self, selector:str="body"): 
         """
         Go to the end of the page, sending keys
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.send_keys(Keys.CONTROL + Keys.END)
     
     
-    def go_top (self, selector="body"): 
+    def go_top (self, selector:str="body"): 
         """
         Go to the start of the page, sending keys
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.send_keys(Keys.CONTROL + Keys.UP)
     
     
-    def go_down (self, selector="body"): 
+    def go_down (self, selector:str="body"): 
         """
         advance to down, in the page, sending keys
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.send_keys(Keys.PAGE_DOWN)
     
     
-    def go_up (self, selector="body"): 
+    def go_up (self, selector:str="body"): 
         """
         Return to up, in page, sending keys
         """
         
-        elem = self.driver.find_element_by_css_selector (selector)
+        elem = self.driver.find_element(By.CSS_SELECTOR, selector)
         elem.send_keys(Keys.PAGE_UP)
     
     
@@ -477,17 +547,18 @@ class Web_scraping ():
         Switch to the main contecnt of the page
         """
         
-        self.driver.switch_to_default_content()
+        self.driver.switch_to.default_content ()
     
     
-    def switch_to_frame (self, frame_id): 
+    def switch_to_frame (self, frame_selector): 
         """
         Switch to iframe inside the main content
         """
 
-        self.driver.switch_to_frame(frame_id)
+        frame = self.get_elem (frame_selector)
+        self.driver.switch_to.frame(frame)
 
-    
+
     def open_tab (self): 
         """
         Create new empty tab in browser
@@ -536,6 +607,38 @@ class Web_scraping ():
         """ Save current page in local file"""
         page_html = self.driver.page_source
         current_folder = os.path.dirname (__file__)
-        page_file = open(os.path.join (current_folder, file_html), "w")
+        page_file = open(os.path.join (current_folder, file_html), "w", encoding='utf-8')
         page_file.write(page_html)
         page_file.close()
+
+    def zoom (self, percentage=50): 
+        """ Custom page zoom with JS"""
+
+        script = f"document.body.style.zoom='{percentage}%'"
+        self.driver.execute_script (script)
+
+    def kill (self):
+        """ Detect and close all tabs """
+        tabs = self.driver.window_handles
+        for _ in tabs:
+            self.switch_to_tab(0)
+            self.end_browser()
+
+    def scroll (self, selector, scroll_x, scroll_y):
+        """ Scroll X or Y in specific element of the page """
+
+        elem = self.get_elem(selector)
+        self.driver.execute_script("arguments[0].scrollTo(arguments[1], arguments[2])", 
+                                    elem, 
+                                    scroll_x, 
+                                    scroll_y) 
+
+    def __wait_load__ (self, selector, back_tab):
+        """ Wait until the table is loaded """
+        
+        while True:
+            elem_text = self.get_text(selector)
+            if elem_text:
+                break
+            else: 
+                time.sleep (0.5)

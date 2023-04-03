@@ -23,7 +23,7 @@ class Unfollow (LogIn):
         # Paths
         self.current_folder = os.path.dirname(__file__)
         self.parent_folder = os.path.dirname(self.current_folder)
-        self.unfullowed_path = os.path.join (self.parent_folder, "unfollowed.txt")
+        self.unfullowed_path = os.path.join (self.current_folder, "unfollowed.txt")
         
         # Get credentials from config file
         self.debug_mode = config.get_credential("debug_mode")
@@ -72,7 +72,9 @@ class Unfollow (LogIn):
             
         with open (followed_path) as file: 
             followed_text = file.read()
-            self.followed_list = followed_text.split("\n")
+            followed_list = followed_text.split("\n")
+            
+        return followed_list
             
     def __get_unfollowed_users__ (self) -> list:
         """ Load list of unfollowed users from text file
@@ -82,21 +84,40 @@ class Unfollow (LogIn):
         """
         
         with open (self.unfullowed_path, encoding='UTF-8', newline="") as file: 
-            self.unfollowed = file.read().split("\n")
+            unfollowed_list = file.read().split("\n")
+            
+        return unfollowed_list
+    
+    def __wait__ (self, message=""):
+        t.sleep (random.randint(30, 180))
+        if message:
+            print (message)
+        
             
     def unfollow (self):
         """ Unfollow users from followed list """
-            
+                    
         for link in self.followed_list: 
-            
+                        
             # Skip if already unfollowed
             if link in self.unfollowed:
+                self.__wait__ (f"Already unfollowed: {link}")
+                continue
+            
+            # Load page
+            self.set_page (link)
+            self.refresh_selenium()
+            
+            # Validate follow text
+            selector_follow = "header button._acan._acap._aj1-"
+            follow_text = self.get_text (selector_follow)
+            
+            # Skip already unfollowed user
+            if follow_text.lower().strip() == "Follow":
+                self.__wait__ (f"Already unfollowed: {link}")
                 continue
             
             # Click unfollow button
-            self.set_page (link)
-            self.refresh_selenium()
-            selector_follow = "header button._acan._acap._aj1-"
             self.click_js (selector_follow)
             
             # Confirm unfollow (if model exists)
@@ -107,16 +128,12 @@ class Unfollow (LogIn):
                 pass
             else:
                 self.click_js (selector_confirm)
-                            
-            print (f"Unfollowed: {link}")
-            
-            # Wait after unfollow
-            t.sleep (random.randint(30, 180))
-            
+                              
             # Save in unfollowed file
-            with open (self.unfullowed_path, "a", encoding='UTF-8', newline="") as file: 
+            with open (self.unfullowed_path, "a", encoding='UTF-8') as file: 
                 file.write (f"{link}")
-            
+                
+            self.__wait__ (f"Unfollowed: {link}")
         
 
     

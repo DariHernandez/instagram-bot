@@ -96,6 +96,8 @@ class Unfollow (LogIn):
             
     def unfollow (self):
         """ Unfollow users from followed list """
+        
+        print ("Starting unfollow process...")
                     
         for link in self.followed_list: 
                         
@@ -106,6 +108,7 @@ class Unfollow (LogIn):
             
             # Load page
             self.set_page (link)
+            t.sleep (2)
             self.refresh_selenium()
             
             # Validate follow text
@@ -113,15 +116,25 @@ class Unfollow (LogIn):
             follow_text = self.get_text (selector_follow)
             
             # Skip already unfollowed user
-            if follow_text.lower().strip() == "Follow":
+            if follow_text.lower().strip() == "follow":
                 self.__wait__ (f"Already unfollowed: {link}")
                 continue
             
             # Click unfollow button
             self.click_js (selector_follow)
+            self.refresh_selenium()
             
-            # Confirm unfollow (if model exists)
+            # Confirm unfollow (if the follow status its on "request")
             selector_confirm = ".x78zum5.xdt5ytf > button:nth-child(2)"
+            try:
+                self.get_elem (selector_confirm)
+            except:
+                pass
+            else:
+                self.click_js (selector_confirm)
+                
+            # Confirm unfollow (alredy followed users)
+            selector_confirm = '.x1cy8zhl .x9f619 > div[role="button"]:last-child'
             try:
                 self.get_elem (selector_confirm)
             except:
@@ -130,7 +143,7 @@ class Unfollow (LogIn):
                 self.click_js (selector_confirm)
                               
             # Save in unfollowed file
-            with open (self.unfullowed_path, "a", encoding='UTF-8') as file: 
+            with open (self.unfullowed_path, "a", encoding='UTF-8', newline="\n") as file: 
                 file.write (f"{link}")
                 
             self.__wait__ (f"Unfollowed: {link}")

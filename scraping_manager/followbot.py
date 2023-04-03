@@ -111,6 +111,13 @@ class FollowBot(metaclass=abc.ABCMeta):
         Extract links from specific selects, and go down in the page for load the next links
         Save links in class variable "profile_links"
         """
+        
+        # Get unfollowed users from file
+        current_folder = os.path.dirname(__file__)
+        parent_folder = os.path.dirname(current_folder)
+        unfollowed_file = os.path.join (parent_folder, "unfollow", "unfollowed.txt")
+        with open (unfollowed_file, "r") as file:
+            unfollowed = file.read().split ("\n")
                 
         print ("Getting links...")
         
@@ -136,7 +143,7 @@ class FollowBot(metaclass=abc.ABCMeta):
                 if "explore/tags" in link: 
                     continue
                 
-                if link not in self.followed_list and link not in self.profile_links: 
+                if link not in self.followed_list and link not in self.profile_links and link not in unfollowed: 
                     self.profile_links.append(link)
                     
                 # Count number of links

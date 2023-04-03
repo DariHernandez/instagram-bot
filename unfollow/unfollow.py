@@ -64,7 +64,8 @@ class Unfollow (LogIn):
                 continue
             else:
                 break
-            
+        
+        # Read followed file
         if option == "1": 
             followed_path = os.path.join (self.parent_folder, "follow-advanced", "followed.txt")
         elif option == "2":
@@ -74,7 +75,15 @@ class Unfollow (LogIn):
             followed_text = file.read()
             followed_list = followed_text.split("\n")
             
-        return followed_list
+        # Read unfollowed file
+        with open (self.unfullowed_path, encoding='UTF-8') as file: 
+            unfollowed_text = file.read()
+            unfollowed_list = unfollowed_text.split("\n")
+            
+        # Remove unfollowed users from followed list
+        user_to_unfollow = list(filter (lambda user: user not in unfollowed_list, followed_list))
+            
+        return user_to_unfollow
             
     def __get_unfollowed_users__ (self) -> list:
         """ Load list of unfollowed users from text file
@@ -100,47 +109,51 @@ class Unfollow (LogIn):
         print ("Starting unfollow process...")
                     
         for link in self.followed_list: 
+            
+            already_unfollowed = False
                         
             # Skip if already unfollowed
             if link in self.unfollowed:
                 self.__wait__ (f"Already unfollowed: {link}")
-                continue
+                already_unfollowed = True
             
-            # Load page
-            self.set_page (link)
-            t.sleep (2)
-            self.refresh_selenium()
-            
-            # Validate follow text
-            selector_follow = "header button._acan._acap._aj1-"
-            follow_text = self.get_text (selector_follow)
-            
-            # Skip already unfollowed user
-            if follow_text.lower().strip() == "follow":
-                self.__wait__ (f"Already unfollowed: {link}")
-                continue
-            
-            # Click unfollow button
-            self.click_js (selector_follow)
-            self.refresh_selenium()
-            
-            # Confirm unfollow (if the follow status its on "request")
-            selector_confirm = ".x78zum5.xdt5ytf > button:nth-child(2)"
-            try:
-                self.get_elem (selector_confirm)
-            except:
-                pass
-            else:
-                self.click_js (selector_confirm)
+            if not already_unfollowed:
+                # Load page
+                self.set_page (link)
+                t.sleep (2)
+                self.refresh_selenium()
                 
-            # Confirm unfollow (alredy followed users)
-            selector_confirm = '.x1cy8zhl .x9f619 > div[role="button"]:last-child'
-            try:
-                self.get_elem (selector_confirm)
-            except:
-                pass
-            else:
-                self.click_js (selector_confirm)
+                # Validate follow text
+                selector_follow = "header button._acan._acap._aj1-"
+                follow_text = self.get_text (selector_follow)
+                
+                # Skip already unfollowed user
+                if follow_text.lower().strip() == "follow":
+                    self.__wait__ (f"Already unfollowed: {link}")
+                    continue
+            
+            if not already_unfollowed:
+                # Click unfollow button
+                self.click_js (selector_follow)
+                self.refresh_selenium()
+                
+                # Confirm unfollow (if the follow status its on "request")
+                selector_confirm = ".x78zum5.xdt5ytf > button:nth-child(2)"
+                try:
+                    self.get_elem (selector_confirm)
+                except:
+                    pass
+                else:
+                    self.click_js (selector_confirm)
+                    
+                # Confirm unfollow (alredy followed users)
+                selector_confirm = '.x1cy8zhl .x9f619 > div[role="button"]:last-child'
+                try:
+                    self.get_elem (selector_confirm)
+                except:
+                    pass
+                else:
+                    self.click_js (selector_confirm)
                               
             # Save in unfollowed file
             with open (self.unfullowed_path, "a", encoding='UTF-8', newline="\n") as file: 

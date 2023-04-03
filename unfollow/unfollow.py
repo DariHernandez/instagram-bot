@@ -130,7 +130,7 @@ class Unfollow (LogIn):
                 # Skip already unfollowed user
                 if follow_text.lower().strip() == "follow":
                     self.__wait__ (f"Already unfollowed: {link}")
-                    continue
+                    already_unfollowed = True
             
             if not already_unfollowed:
                 # Click unfollow button
@@ -156,8 +156,8 @@ class Unfollow (LogIn):
                     self.click_js (selector_confirm)
                               
             # Save in unfollowed file
-            with open (self.unfullowed_path, "a", encoding='UTF-8', newline="\n") as file: 
-                file.write (f"{link}")
+            with open (self.unfullowed_path, "a", encoding='UTF-8') as file: 
+                file.write (f"\n{link}")
                 
             self.__wait__ (f"Unfollowed: {link}")
         

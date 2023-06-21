@@ -1,5 +1,5 @@
-<div><a href='https://github.com/github.com/darideveloper/blob/master/LICENSE' target='_blank'>
-            <img src='https://img.shields.io/github/license/github.com/darideveloper.svg?style=for-the-badge' alt='MIT License' height='30px'/>
+<div><a href='https://github.com/darideveloper/instagram-bot/blob/master/LICENSE' target='_blank'>
+            <img src='https://img.shields.io/github/license/darideveloper/instagram-bot.svg?style=for-the-badge' alt='MIT License' height='30px'/>
         </a><a href='https://www.linkedin.com/in/francisco-dari-hernandez-6456b6181/' target='_blank'>
                 <img src='https://img.shields.io/static/v1?style=for-the-badge&message=LinkedIn&color=0A66C2&logo=LinkedIn&logoColor=FFFFFF&label=' alt='Linkedin' height='30px'/>
             </a><a href='https://t.me/darideveloper' target='_blank'>
@@ -18,11 +18,7 @@
 
 Bot to publish and interact with users, on instagram, with seleium
 
-Start date: **2021-08-09**
-
-Last update: **2023-05-10**
-
-Project type: **client's project**
+Project type: **client**
 
 </div><br><details>
             <summary>Table of Contents</summary>
@@ -200,5 +196,4 @@ bot = PostBot(xlsx_file=filename, img_dir=directory, debug_mode=True, headless=F
 bot.autopost()
 
 ```
-
 
